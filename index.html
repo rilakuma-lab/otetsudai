@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>おてつだいカレンダー</title>
+    <style>
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f7f9fc;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #ff7f50;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        /* ステータスエリア */
+        .status-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .status-box {
+            flex: 1;
+            min-width: 45%;
+            background: #fff;
+            padding: 10px 5px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: inset 0 0 0 2px #ffe7ba;
+            box-sizing: border-box;
+        }
+        .status-box.money { box-shadow: inset 0 0 0 2px #ffadd2; color: #eb2f96; }
+        .status-box.rate { box-shadow: inset 0 0 0 2px #b7eb8f; color: #389e0d; }
+        .status-box.bonus { box-shadow: inset 0 0 0 2px #adc6ff; color: #1d39c4; background: #f0f5ff; display: none; }
+        .num { font-size: 20px; display: block; margin-top: 4px; }
+
+        /* カレンダーヘッダー */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+        .month-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #434343;
+        }
+        .nav-btn {
+            background: #ff7f50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 2px 0 #e0663b;
+        }
+        .nav-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* カレンダーエリア */
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 5px;
+        }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            width: 100%;
+        }
+        .day {
+            aspect-ratio: 1;
+            background: #f5f5f5;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4px 2px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        .day:hover { background: #e6f7ff; border-color: #91d5ff; }
+        .day.empty { background: transparent; cursor: default; border: none; }
+        .day.today { border: 2px solid #ff7f50; background: #fff7e6; }
+        
+        .day-status { 
+            font-size: 9px; 
+            text-align: center; 
+            margin-top: auto; 
+            white-space: nowrap; 
+            overflow: hidden; 
+        }
+        .text-green { color: #52c41a; }
+        .text-orange { color: #fa8c16; font-size: 8px; }
+        
+        .text-hanamaru { 
+            color: #ff4d4f; 
+            font-size: 14px; 
+            font-weight: bold;
+            display: inline-block;
+            animation: popEffect 0.3s ease;
+        }
+
+        @keyframes popEffect {
+            0% { transform: scale(0.5); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* 設定エリア */
+        .settings-section {
+            margin-top: 30px;
+            border-top: 2px dashed #e8e8e8;
+            padding-top: 20px;
+        }
+        .settings-section h2 {
+            font-size: 15px;
+            color: #595959;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .input-group-name {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-group-name label { font-size: 12px; font-weight: bold; color: #595959; }
+        .input-group-name input, .input-group-name select { padding: 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: white; }
+        
+        .config-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .config-row input[type="text"] { flex: 3; padding: 6px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; min-width: 0; }
+        .config-row input[type="number"] { flex: 1; padding: 6px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; text-align: right; min-width: 0; }
+        .save-config-btn {
+            width: 100%; background: #1890ff; color: white; border: none; padding: 10px;
+            font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            width: 92%;
+            max-width: 380px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+        .modal h3 { margin-top: 0; color: #ff7f50; text-align: center; margin-bottom: 5px; font-size: 16px; }
+        
+        .task-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 6px;
+            margin: 6px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .task-name { font-size: 12px; font-weight: bold; flex: 1; margin-right: 2px; word-break: break-all; }
+        .radio-group { display: flex; gap: 4px; }
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 9px;
+            cursor: pointer;
+            min-width: 32px;
+        }
+        .radio-label input { margin-bottom: 2px; }
+
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn.save { background: #52c41a; color: white; }
+        .btn.cancel { background: #d9d9d9; color: #595959; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="app-title">📅 おてつだいカレンダー</h1>
+    
+    <div class="status-container">
+        <div class="status-box money">
+            <span class="stat-month-label">今月</span>の貯金
+            <span class="num"><span id="total-money">0</span>円</span>
+        </div>
+        <div class="status-box rate">
+            <span class="stat-month-label">今月</span>の達成率
+            <span class="num"><span id="achievement-rate">0</span>%</span>
+        </div>
+        <div class="status-box bonus" id="bonus-box">
+            🎁 半期ボーナス
+            <span class="num"><span id="bonus-money">0</span>円</span>
+        </div>
+    </div>
+
+    <div class="calendar-header">
+        <button class="nav-btn" onclick="changeMonth(-1)">◀ 前の月</button>
+        <div class="month-title" id="calendar-title">2026年6月</div>
+        <button class="nav-btn" onclick="changeMonth(1)">次の月 ▶</button>
+    </div>
+
+    <div class="weekdays">
+        <div style="color: #ff4d4f;">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div style="color: #1890ff;">土</div>
+    </div>
+    <div class="days" id="calendar-days"></div>
+
+    <div class="settings-section">
+        <h2>⚙️ アプリの設定</h2>
+        
+        <div class="input-group-name" style="margin-bottom: 10px;">
+            <label for="child-name-input">👦 お子さんのなまえ</label>
+            <input type="text" id="child-name-input" placeholder="例：たろう" value="" onchange="saveChildNameOnly()">
+        </div>
+
+        <div class="input-group-name">
+            <label for="config-month-select">📅 どこの設定をかえる？</label>
+            <select id="config-month-select" onchange="onConfigMonthChange()">
+                </select>
+        </div>
+
+        <label style="font-size: 12px; font-weight: bold; color: #595959; display: block; margin-bottom: 5px;">📝 選んだ月のおてつだいと金額</label>
+        <div id="config-container"></div>
+        <button class="save-config-btn" onclick="saveConfiguration()">この月の設定を保存する</button>
+    </div>
+</div>
+
+<div class="modal" id="task-modal">
+    <div class="modal-content">
+        <h3 id="modal-date-title">きろく</h3>
+        <p style="font-size: 11px; color: #666; text-align: center; margin-bottom: 10px;">項目ごとにえらんでね</p>
+        
+        <div id="modal-task-rows"></div>
+
+        <div class="modal-btns">
+            <button class="btn cancel" onclick="closeModal()">キャンセル</button>
+            <button class="btn save" onclick="saveDayRecord()">保存する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let calendarData = {};
+    let selectedDateStr = "";
+    let displayDate = new Date();
+    const today = new Date();
+    let childName = "";
+
+    // ⭐月別の設定をしまう箱（未設定の月は、このデフォルト値が自動適用されます）
+    let monthlyConfigs = {}; 
+    const defaultTasks = [
+        { name: "🧹 おへやのそうじ", price: 10 },
+        { name: "🧺 せんたくものたたみ", price: 10 },
+        { name: "🍽️ ごはんの準備・片付け", price: 10 },
+        { name: "🌸 花の水やり・その他", price: 10 }
+    ];
+
+    window.onload = function() {
+        // データの読み込み
+        const savedData = localStorage.getItem('otetsudai_data');
+        if (savedData) calendarData = JSON.parse(savedData);
+
+        const savedMonthlyConfig = localStorage.getItem('otetsudai_monthly_configs');
+        if (savedMonthlyConfig) monthlyConfigs = JSON.parse(savedMonthlyConfig);
+
+        const savedName = localStorage.getItem('otetsudai_child_name');
+        if (savedName) childName = savedName;
+        document.getElementById('child-name-input').value = childName;
+
+        // 設定の月選択肢（今月を中心に前後12ヶ月）をプルダウンに生成
+        initMonthSelectOptions();
+
+        updateTitleDisplay();
+        // 現在表示しているカレンダーの月に合わせて設定入力欄を表示
+        syncConfigSelectWithDisplayDate();
+        renderSettingsInput();
+        initCalendar();
+    };
+
+    window.addEventListener('resize', () => { initCalendar(); });
+    window.addEventListener('orientationchange', () => { setTimeout(initCalendar, 100); });
+
+    function initMonthSelectOptions() {
+        const select = document.getElementById('config-month-select');
+        select.innerHTML = "";
+        
+        // 2026年を中心に、1月〜12月の選択肢を作成
+        const year = displayDate.getFullYear();
+        for (let m = 1; m <= 12; m++) {
+            const opt = document.createElement('option');
+            const monthKey = `${year}-${String(m).padStart(2, '0')}`;
+            opt.value = monthKey;
+            opt.innerText = `${year}年 ${m}月`;
+            select.appendChild(opt);
+        }
+    }
+
+    function syncConfigSelectWithDisplayDate() {
+        const year = displayDate.getFullYear();
+        const month = displayDate.getMonth() + 1;
+        const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+        document.getElementById('config-month-select').value = monthKey;
+    }
+
+    // 特定の月のお手伝い設定を取得する関数（なければデフォルトを返す）
+    function getTaskConfigForMonth(monthKey) {
+        if (monthlyConfigs[monthKey]) {
+            return monthlyConfigs[monthKey];
+        }
+        // まだ設定がない月は、直近の設定があればそれを使う、なければ初期値を複製
+        return JSON.parse(JSON.stringify(defaultTasks));
+    }
+
+    function updateTitleDisplay() {
+        const titleEl = document.getElementById('app-title');
+        titleEl.innerText = childName ? `📅 ${childName} のおてつだいカレンダー` : `📅 おてつだいカレンダー`;
+    }
+
+    function saveChildNameOnly() {
+        childName = document.getElementById('child-name-input').value.trim();
+        localStorage.setItem('otetsudai_child_name', childName);
+        updateTitleDisplay();
+    }
+
+    // プルダウンで選ばれている月に合わせて、入力欄の中身を書き換える
+    function renderSettingsInput() {
+        const monthKey = document.getElementById('config-month-select').value;
+        const config = getTaskConfigForMonth(monthKey);
+        
+        const container = document.getElementById('config-container');
+        container.innerHTML = "";
+        config.forEach((task, i) => {
+            const row = document.createElement('div');
+            row.className = "config-row";
+            row.innerHTML = `
+                <input type="text" id="config-name-${i}" value="${task.name}" placeholder="お手伝い">
+                <input type="number" id="config-price-${i}" value="${task.price}" min="0" placeholder="円">
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function onConfigMonthChange() {
+        renderSettingsInput();
+    }
+
+    // 「この月の設定を保存する」を押したとき
+    function saveConfiguration() {
+        saveChildNameOnly();
+
+        const monthKey = document.getElementById('config-month-select').value;
+        let newConfig = [];
+
+        for (let i = 0; i < 4; i++) {
+            const nameInput = document.getElementById(`config-name-${i}`).value.trim();
+            const priceInput = parseInt(document.getElementById(`config-price-${i}`).value) || 0;
+            newConfig.push({
+                name: nameInput || `おてつだい ${i+1}`,
+                price: priceInput
+            });
+        }
+
+        // 月別設定に保存
+        monthlyConfigs[monthKey] = newConfig;
+        localStorage.setItem('otetsudai_monthly_configs', JSON.stringify(monthlyConfigs));
+        
+        const mLabel = monthKey.split('-')[1];
+        alert(`${parseInt(mLabel)}月 の設定を保存しました！`);
+        initCalendar();
+    }
+
+    function initCalendar() {
+        const year = displayDate.getFullYear();
+        const month = displayDate.getMonth();
+        const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+        document.getElementById('calendar-title').innerText = `${year}年${month + 1}月`;
+        const labels = document.querySelectorAll('.stat-month-label');
+        labels.forEach(l => l.innerText = `${month + 1}月`);
+
+        // カレンダー切り替え時に、設定エリアのプルダウンも連動させる
+        syncConfigSelectWithDisplayDate();
+        renderSettingsInput();
+
+        const container = document.getElementById('calendar-days');
+        container.innerHTML = "";
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        // その月の設定を呼び出す
+        const currentMonthConfig = getTaskConfigForMonth(monthKey);
+
+        for (let i = 0; i < firstDayIndex; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = "day empty";
+            container.appendChild(emptyDiv);
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = "day";
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                dayDiv.classList.add('today');
+            }
+
+            let statusHtml = "-";
+            if (calendarData[dateKey]) {
+                let dayMoney = 0;
+                let doneCount = 0;
+                let hasOff = false;
+
+                calendarData[dateKey].forEach((state, i) => {
+                    if (state === 'done') {
+                        dayMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
+                        doneCount++;
+                    } else if (state === 'off') {
+                        hasOff = true;
+                    }
+                });
+
+                if (doneCount === 4) {
+                    statusHtml = `<span class="text-hanamaru">💮</span>`;
+                } else if (dayMoney > 0) {
+                    statusHtml = `<span class="text-green">⭕+${dayMoney}</span>`;
+                } else if (hasOff) {
+                    statusHtml = `<span class="text-orange">お休み💤</span>`;
+                }
+            }
+
+            dayDiv.innerHTML = `<span>${day}</span><div class="day-status" id="status-${dateKey}">${statusHtml}</div>`;
+            dayDiv.onclick = () => openModal(dateKey, month + 1, day);
+            container.appendChild(dayDiv);
+        }
+
+        updateStats();
+    }
+
+    function changeMonth(offset) {
+        displayDate.setMonth(displayDate.getMonth() + offset);
+        initCalendar();
+    }
+
+    function openModal(dateKey, month, day) {
+        selectedDateStr = dateKey;
+        const monthKey = dateKey.substring(0, 7);
+        const currentMonthConfig = getTaskConfigForMonth(monthKey);
+
+        document.getElementById('modal-date-title').innerText = `${month}月${day}日 のきろく`;
+        
+        const rowsContainer = document.getElementById('modal-task-rows');
+        rowsContainer.innerHTML = "";
+
+        currentMonthConfig.forEach((task, i) => {
+            let savedState = 'none';
+            if (calendarData[dateKey] && calendarData[dateKey][i]) {
+                savedState = calendarData[dateKey][i];
+            }
+
+            const row = document.createElement('div');
+            row.className = "task-row";
+            row.innerHTML = `
+                <span class="task-name">${task.name} <span style="font-size:10px; color:#999; font-weight:normal;">(${task.price}円)</span></span>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="done" ${savedState === 'done' ? 'checked' : ''}>やった</label>
+                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="none" ${savedState === 'none' ? 'checked' : ''}>なし</label>
+                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="off" ${savedState === 'off' ? 'checked' : ''}>休み</label>
+                </div>
+            `;
+            rowsContainer.appendChild(row);
+        });
+
+        document.getElementById('task-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('task-modal').style.display = 'none';
+    }
+
+    function saveDayRecord() {
+        let dayStates = [];
+        let hasData = false;
+
+        for (let i = 0; i < 4; i++) {
+            const selectedValue = document.querySelector(`input[name="modal-task${i}"]:checked`).value;
+            dayStates.push(selectedValue);
+            if (selectedValue === 'done' || selectedValue === 'off') {
+                hasData = true;
+            }
+        }
+
+        if (hasData) {
+            calendarData[selectedDateStr] = dayStates;
+        } else {
+            delete calendarData[selectedDateStr];
+        }
+
+        localStorage.setItem('otetsudai_data', JSON.stringify(calendarData));
+        closeModal();
+        initCalendar();
+    }
+
+    function updateStats() {
+        let totalMoney = 0;
+        let totalDoneTasks = 0;
+        let totalTargetTasks = 0;
+
+        const currentYear = displayDate.getFullYear();
+        const currentMonth = displayDate.getMonth() + 1;
+        const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+        
+        const currentMonthConfig = getTaskConfigForMonth(monthPrefix);
+
+        // 1. 今月の集計（その月の単価設定を使用）
+        for (let key in calendarData) {
+            if (key.startsWith(monthPrefix)) {
+                const dayStates = calendarData[key];
+                dayStates.forEach((state, i) => {
+                    if (state === 'done') {
+                        totalMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
+                        totalDoneTasks++;
+                        totalTargetTasks++;
+                    } else if (state === 'none') {
+                        totalTargetTasks++;
+                    }
+                });
+            }
+        }
+
+        let rate = 0;
+        if (totalTargetTasks > 0) {
+            rate = Math.round((totalDoneTasks / totalTargetTasks) * 100);
+        }
+
+        document.getElementById('total-money').innerText = totalMoney;
+        document.getElementById('achievement-rate').innerText = rate;
+
+        // 2. 半期ボーナスの計算
+        const bonusBox = document.getElementById('bonus-box');
+        
+        if (currentMonth === 6 || currentMonth === 12) {
+            bonusBox.style.display = "block";
+
+            let targetPrefixes = [];
+            if (currentMonth === 6) {
+                for(let m=1; m<=6; m++) targetPrefixes.push(`${currentYear}-${String(m).padStart(2, '0')}`);
+            } else {
+                for(let m=7; m<=12; m++) targetPrefixes.push(`${currentYear}-${String(m).padStart(2, '0')}`);
+            }
+
+            let periodDone = 0;
+            let periodTarget = 0;
+
+            for (let key in calendarData) {
+                let match = targetPrefixes.some(p => key.startsWith(p));
+                if (match) {
+                    const dayStates = calendarData[key];
+                    dayStates.forEach(state => {
+                        if (state === 'done') {
+                            periodDone++;
+                            periodTarget++;
+                        } else if (state === 'none') {
+                            periodTarget++;
+                        }
+                    });
+                }
+            }
+
+            let periodRate = 0;
+            if (periodTarget > 0) {
+                periodRate = periodDone / periodTarget;
+            }
+
+            // ボーナスの基準単価は「その月（6月または12月）の設定単価」をベースに計算します
+            let totalConfigPrice = currentMonthConfig.reduce((sum, t) => sum + (t.price || 0), 0);
+            let avgPrice = totalConfigPrice / currentMonthConfig.length;
+
+            let bonusMoney = Math.round((avgPrice * 100) * periodRate);
+            document.getElementById('bonus-money').innerText = bonusMoney.toLocaleString();
+        } else {
+            bonusBox.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
