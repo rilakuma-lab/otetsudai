@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>おてつだいカレンダー</title>
+    <title>おてつだいカレンダー（同期・流用強化版）</title>
     <style>
         html, body {
             width: 100%;
@@ -37,7 +37,6 @@
             margin-bottom: 15px;
             word-break: break-all;
         }
-        /* ステータスエリア */
         .status-container {
             display: flex;
             flex-wrap: wrap;
@@ -61,7 +60,6 @@
         .status-box.bonus { box-shadow: inset 0 0 0 2px #adc6ff; color: #1d39c4; background: #f0f5ff; display: none; }
         .num { font-size: 20px; display: block; margin-top: 4px; }
 
-        /* カレンダーヘッダー */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -87,7 +85,6 @@
         }
         .nav-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* カレンダーエリア */
         .weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -147,7 +144,6 @@
             100% { transform: scale(1); }
         }
 
-        /* 設定エリア */
         .settings-section {
             margin-top: 30px;
             border-top: 2px dashed #e8e8e8;
@@ -180,7 +176,6 @@
             font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
         }
 
-        /* モーダル */
         .modal {
             display: none;
             position: fixed;
@@ -226,6 +221,30 @@
         .btn.save { background: #52c41a; color: white; }
         .btn.cancel { background: #d9d9d9; color: #595959; }
     </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ⚠️【重要】ここにFirebaseの設定値を貼り付けます
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkiiegJkYx8AjmIv1S03_rWkTPOdxvydw",
+            authDomain: "otetsdai-app.firebaseapp.com",
+            projectId: "otetsdai-app",
+            storageBucket: "otetsdai-app.firebasestorage.app",
+            messagingSenderId: "589994607281",
+            appId: "1:589994607281:web:acbcb4b609e1aa9a10d890"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.setDoc = setDoc;
+
+        startSync();
+    </script>
 </head>
 <body>
 
@@ -249,7 +268,7 @@
 
     <div class="calendar-header">
         <button class="nav-btn" onclick="changeMonth(-1)">◀ 前の月</button>
-        <div class="month-title" id="calendar-title">2026年6月</div>
+        <div class="month-title" id="calendar-title">----年--月</div>
         <button class="nav-btn" onclick="changeMonth(1)">次の月 ▶</button>
     </div>
 
@@ -269,7 +288,7 @@
         <div class="input-group-name">
             <label for="config-month-select">📅 どこの設定をかえる？</label>
             <select id="config-month-select" onchange="onConfigMonthChange()">
-                </select>
+            </select>
         </div>
 
         <label style="font-size: 12px; font-weight: bold; color: #595959; display: block; margin-bottom: 5px;">📝 選んだ月のおてつだいと金額</label>
@@ -298,46 +317,58 @@
     let displayDate = new Date();
     const today = new Date();
     let childName = "";
-
-    // ⭐月別の設定をしまう箱（未設定の月は、このデフォルト値が自動適用されます）
     let monthlyConfigs = {}; 
+
     const defaultTasks = [
-        { name: "🧺 タオルたたみ", price: 7 },
-        { name: "🪟 カーテン開け閉め", price: 7 },
-        { name: "🍵 お茶つくり", price: 7 },
-        { name: "🍽️ 食器下げ", price: 7 }
+        { name: "🧹 おへやのそうじ", price: 10 },
+        { name: "🧺 せんたくものたたみ", price: 10 },
+        { name: "🍽️ ごはんの準備・片付け", price: 10 },
+        { name: "🌸 花の水やり・その他", price: 10 }
     ];
-
-    window.onload = function() {
-        // データの読み込み
-        const savedData = localStorage.getItem('otetsudai_data');
-        if (savedData) calendarData = JSON.parse(savedData);
-
-        const savedMonthlyConfig = localStorage.getItem('otetsudai_monthly_configs');
-        if (savedMonthlyConfig) monthlyConfigs = JSON.parse(savedMonthlyConfig);
-
-        const savedName = localStorage.getItem('otetsudai_child_name');
-        if (savedName) childName = savedName;
-        document.getElementById('child-name-input').value = childName;
-
-        // 設定の月選択肢（今月を中心に前後12ヶ月）をプルダウンに生成
-        initMonthSelectOptions();
-
-        updateTitleDisplay();
-        // 現在表示しているカレンダーの月に合わせて設定入力欄を表示
-        syncConfigSelectWithDisplayDate();
-        renderSettingsInput();
-        initCalendar();
-    };
 
     window.addEventListener('resize', () => { initCalendar(); });
     window.addEventListener('orientationchange', () => { setTimeout(initCalendar, 100); });
 
+    function startSync() {
+        initMonthSelectOptions();
+        syncConfigSelectWithDisplayDate();
+
+        import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then((firestore) => {
+            firestore.onSnapshot(firestore.doc(window.db, "otetsudaiApp", "sharedData"), (docSnap) => {
+                if (docSnap.exists()) {
+                    const onlineData = docSnap.data();
+                    calendarData = onlineData.calendarData || {};
+                    monthlyConfigs = onlineData.monthlyConfigs || {};
+                    childName = onlineData.childName || "";
+                    
+                    document.getElementById('child-name-input').value = childName;
+                    updateTitleDisplay();
+                    renderSettingsInput();
+                    initCalendar();
+                } else {
+                    renderSettingsInput();
+                    initCalendar();
+                }
+            });
+        });
+    }
+
+    async function uploadToCloud() {
+        if (!window.db) return;
+        try {
+            await window.setDoc(window.doc(window.db, "otetsudaiApp", "sharedData"), {
+                calendarData: calendarData,
+                monthlyConfigs: monthlyConfigs,
+                childName: childName
+            });
+        } catch (e) {
+            console.error("データ同期エラー: ", e);
+        }
+    }
+
     function initMonthSelectOptions() {
         const select = document.getElementById('config-month-select');
         select.innerHTML = "";
-        
-        // 2026年を中心に、1月〜12月の選択肢を作成
         const year = displayDate.getFullYear();
         for (let m = 1; m <= 12; m++) {
             const opt = document.createElement('option');
@@ -352,15 +383,38 @@
         const year = displayDate.getFullYear();
         const month = displayDate.getMonth() + 1;
         const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-        document.getElementById('config-month-select').value = monthKey;
+        const select = document.getElementById('config-month-select');
+        if(select) select.value = monthKey;
     }
 
-    // 特定の月のお手伝い設定を取得する関数（なければデフォルトを返す）
+    // ⭐【ロジック強化】過去の月にさかのぼって有効な設定を探す関数
     function getTaskConfigForMonth(monthKey) {
-        if (monthlyConfigs[monthKey]) {
+        // 1. 指定された月そのものに完全なデータがあればそれを使う
+        if (monthlyConfigs[monthKey] && Array.isArray(monthlyConfigs[monthKey]) && monthlyConfigs[monthKey].length === 4) {
             return monthlyConfigs[monthKey];
         }
-        // まだ設定がない月は、直近の設定があればそれを使う、なければ初期値を複製
+
+        // 2. なければ、同じ年の中で「過去の月」を1月から順に遡って最新の有効な設定を探す
+        const parts = monthKey.split('-');
+        const year = parts[0];
+        const currentMonth = parseInt(parts[1]);
+
+        for (let m = currentMonth - 1; m >= 1; m--) {
+            const checkKey = `${year}-${String(m).padStart(2, '0')}`;
+            if (monthlyConfigs[checkKey] && Array.isArray(monthlyConfigs[checkKey]) && monthlyConfigs[checkKey].length === 4) {
+                return monthlyConfigs[checkKey];
+            }
+        }
+
+        // 3. 過去の月にも一切データがなければ、登録されている一番最初の月のデータを探す
+        for (let m = 1; m <= 12; m++) {
+            const checkKey = `${year}-${String(m).padStart(2, '0')}`;
+            if (monthlyConfigs[checkKey] && Array.isArray(monthlyConfigs[checkKey]) && monthlyConfigs[checkKey].length === 4) {
+                return monthlyConfigs[checkKey];
+            }
+        }
+
+        // 4. 本当に何もなければ初期のデフォルト値を返す
         return JSON.parse(JSON.stringify(defaultTasks));
     }
 
@@ -371,13 +425,14 @@
 
     function saveChildNameOnly() {
         childName = document.getElementById('child-name-input').value.trim();
-        localStorage.setItem('otetsudai_child_name', childName);
         updateTitleDisplay();
+        uploadToCloud();
     }
 
-    // プルダウンで選ばれている月に合わせて、入力欄の中身を書き換える
     function renderSettingsInput() {
-        const monthKey = document.getElementById('config-month-select').value;
+        const select = document.getElementById('config-month-select');
+        if (!select) return;
+        const monthKey = select.value;
         const config = getTaskConfigForMonth(monthKey);
         
         const container = document.getElementById('config-container');
@@ -397,9 +452,9 @@
         renderSettingsInput();
     }
 
-    // 「この月の設定を保存する」を押したとき
     function saveConfiguration() {
-        saveChildNameOnly();
+        childName = document.getElementById('child-name-input').value.trim();
+        updateTitleDisplay();
 
         const monthKey = document.getElementById('config-month-select').value;
         let newConfig = [];
@@ -413,13 +468,9 @@
             });
         }
 
-        // 月別設定に保存
         monthlyConfigs[monthKey] = newConfig;
-        localStorage.setItem('otetsudai_monthly_configs', JSON.stringify(monthlyConfigs));
-        
-        const mLabel = monthKey.split('-')[1];
-        alert(`${parseInt(mLabel)}月 の設定を保存しました！`);
-        initCalendar();
+        alert(`${parseInt(monthKey.split('-')[1])}月 の設定を保存しました！\n他の未設定の月にも自動で流用されます。`);
+        uploadToCloud();
     }
 
     function initCalendar() {
@@ -427,21 +478,21 @@
         const month = displayDate.getMonth();
         const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-        document.getElementById('calendar-title').innerText = `${year}年${month + 1}月`;
+        const titleEl = document.getElementById('calendar-title');
+        if(titleEl) titleEl.innerText = `${year}年${month + 1}月`;
+        
         const labels = document.querySelectorAll('.stat-month-label');
         labels.forEach(l => l.innerText = `${month + 1}月`);
 
-        // カレンダー切り替え時に、設定エリアのプルダウンも連動させる
         syncConfigSelectWithDisplayDate();
         renderSettingsInput();
 
         const container = document.getElementById('calendar-days');
+        if(!container) return;
         container.innerHTML = "";
 
         const firstDayIndex = new Date(year, month, 1).getDay();
         const totalDays = new Date(year, month + 1, 0).getDate();
-
-        // その月の設定を呼び出す
         const currentMonthConfig = getTaskConfigForMonth(monthKey);
 
         for (let i = 0; i < firstDayIndex; i++) {
@@ -550,9 +601,8 @@
             delete calendarData[selectedDateStr];
         }
 
-        localStorage.setItem('otetsudai_data', JSON.stringify(calendarData));
         closeModal();
-        initCalendar();
+        uploadToCloud();
     }
 
     function updateStats() {
@@ -566,7 +616,6 @@
         
         const currentMonthConfig = getTaskConfigForMonth(monthPrefix);
 
-        // 1. 今月の集計（その月の単価設定を使用）
         for (let key in calendarData) {
             if (key.startsWith(monthPrefix)) {
                 const dayStates = calendarData[key];
@@ -587,14 +636,15 @@
             rate = Math.round((totalDoneTasks / totalTargetTasks) * 100);
         }
 
-        document.getElementById('total-money').innerText = totalMoney;
-        document.getElementById('achievement-rate').innerText = rate;
+        const mEl = document.getElementById('total-money');
+        const rEl = document.getElementById('achievement-rate');
+        if(mEl) mEl.innerText = totalMoney;
+        if(rEl) rEl.innerText = rate;
 
-        // 2. 半期ボーナスの計算
         const bonusBox = document.getElementById('bonus-box');
         
         if (currentMonth === 6 || currentMonth === 12) {
-            bonusBox.style.display = "block";
+            if(bonusBox) bonusBox.style.display = "block";
 
             let targetPrefixes = [];
             if (currentMonth === 6) {
@@ -626,14 +676,14 @@
                 periodRate = periodDone / periodTarget;
             }
 
-            // ボーナスの基準単価は「その月（6月または12月）の設定単価」をベースに計算します
             let totalConfigPrice = currentMonthConfig.reduce((sum, t) => sum + (t.price || 0), 0);
             let avgPrice = totalConfigPrice / currentMonthConfig.length;
 
             let bonusMoney = Math.round((avgPrice * 100) * periodRate);
-            document.getElementById('bonus-money').innerText = bonusMoney.toLocaleString();
+            const bEl = document.getElementById('bonus-money');
+            if(bEl) bEl.innerText = bonusMoney.toLocaleString();
         } else {
-            bonusBox.style.display = "none";
+            if(bonusBox) bonusBox.style.display = "none";
         }
     }
 </script>
