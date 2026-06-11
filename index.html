@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>おてつだいカレンダー（同期・流用強化版）</title>
+    <title>おてつだいカレンダー（ふたり対応版）</title>
     <style>
         html, body {
             width: 100%;
@@ -29,14 +29,33 @@
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
-        h1 {
-            text-align: center;
-            color: #ff7f50;
-            font-size: 18px;
-            margin-top: 0;
+        
+        /* 👦👧 お子さん切り替えタブ */
+        .child-switcher {
+            display: flex;
+            gap: 8px;
             margin-bottom: 15px;
-            word-break: break-all;
         }
+        .child-tab {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            background: #f0f2f5;
+            border: 2px solid #d9d9d9;
+            border-radius: 12px;
+            cursor: pointer;
+            color: #595959;
+            transition: all 0.2s;
+        }
+        .child-tab.active {
+            background: #fff3e6;
+            border-color: #ff7f50;
+            color: #ff7f50;
+            box-shadow: 0 3px 6px rgba(255,127,80,0.15);
+        }
+
         .status-container {
             display: flex;
             flex-wrap: wrap;
@@ -155,14 +174,14 @@
             margin-bottom: 12px;
             text-align: center;
         }
-        .input-group-name {
+        .input-group-names {
             margin-bottom: 15px;
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            gap: 10px;
         }
-        .input-group-name label { font-size: 12px; font-weight: bold; color: #595959; }
-        .input-group-name input, .input-group-name select { padding: 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: white; }
+        .input-group-names div { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .input-group-names label { font-size: 12px; font-weight: bold; color: #595959; }
+        .input-group-names input, .settings-section select { padding: 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: white; }
         
         .config-row {
             display: flex;
@@ -228,12 +247,12 @@
 
         // ⚠️【重要】ここにFirebaseの設定値を貼り付けます
         const firebaseConfig = {
-            apiKey: "AIzaSyAkiiegJkYx8AjmIv1S03_rWkTPOdxvydw",
-            authDomain: "otetsdai-app.firebaseapp.com",
-            projectId: "otetsdai-app",
-            storageBucket: "otetsdai-app.firebasestorage.app",
-            messagingSenderId: "589994607281",
-            appId: "1:589994607281:web:acbcb4b609e1aa9a10d890"
+apiKey: "AIzaSyAkiiegJkYx8AjmIv1S03_rWkTPOdxvydw"
+    authDomain: "otetsdai-app.firebaseapp.com"
+    projectId: "otetsdai-app"
+    storageBucket: "otetsdai-app.firebasestorage.app"
+    messagingSenderId: "589994607281"
+    appId: "1:589994607281:web:acbcb4b609e1aa9a10d890"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -249,7 +268,10 @@
 <body>
 
 <div class="container">
-    <h1 id="app-title">📅 おてつだいカレンダー</h1>
+    <div class="child-switcher">
+        <div class="child-tab active" id="tab-child1" onclick="switchChild(1)">👦 お子さん1</div>
+        <div class="child-tab" id="tab-child2" onclick="switchChild(2)">👧 お子さん2</div>
+    </div>
     
     <div class="status-container">
         <div class="status-box money">
@@ -280,20 +302,28 @@
     <div class="settings-section">
         <h2>⚙️ アプリの設定</h2>
         
-        <div class="input-group-name" style="margin-bottom: 10px;">
-            <label for="child-name-input">👦 お子さんのなまえ</label>
-            <input type="text" id="child-name-input" placeholder="例：たろう" value="" onchange="saveChildNameOnly()">
+        <div class="input-group-names">
+            <div>
+                <label for="name1-input">👦 お子さん1のなまえ</label>
+                <input type="text" id="name1-input" placeholder="例：たろう" value="" onchange="saveNamesOnly()">
+            </div>
+            <div>
+                <label for="name2-input">👧 お子さん2のなまえ</label>
+                <input type="text" id="name2-input" placeholder="例：はなこ" value="" onchange="saveNamesOnly()">
+            </div>
         </div>
 
-        <div class="input-group-name">
-            <label for="config-month-select">📅 どこの設定をかえる？</label>
+        <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px;">
+            <label for="config-month-select" style="font-size: 12px; font-weight: bold; color: #595959;">📅 どこの設定をかえる？</label>
             <select id="config-month-select" onchange="onConfigMonthChange()">
             </select>
         </div>
 
-        <label style="font-size: 12px; font-weight: bold; color: #595959; display: block; margin-bottom: 5px;">📝 選んだ月のおてつだいと金額</label>
+        <label style="font-size: 12px; font-weight: bold; color: #595959; display: block; margin-bottom: 5px;">
+            📝 <span id="config-target-name">お子さん</span> のおてつだいと金額
+        </label>
         <div id="config-container"></div>
-        <button class="save-config-btn" onclick="saveConfiguration()">この月の設定を保存する</button>
+        <button class="save-config-btn" onclick="saveConfiguration()">この子のこの月の設定を保存する</button>
     </div>
 </div>
 
@@ -312,12 +342,16 @@
 </div>
 
 <script>
-    let calendarData = {};
+    // 2人分のデータをまるごと管理する巨大な箱
+    let fullCloudData = {
+        child1: { calendarData: {}, monthlyConfigs: {}, name: "お子さん1" },
+        child2: { calendarData: {}, monthlyConfigs: {}, name: "お子さん2" }
+    };
+
+    let currentChildIdx = 1; // 1 = 子1, 2 = 子2
     let selectedDateStr = "";
     let displayDate = new Date();
     const today = new Date();
-    let childName = "";
-    let monthlyConfigs = {}; 
 
     const defaultTasks = [
         { name: "🧹 おへやのそうじ", price: 10 },
@@ -334,15 +368,15 @@
         syncConfigSelectWithDisplayDate();
 
         import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js").then((firestore) => {
-            firestore.onSnapshot(firestore.doc(window.db, "otetsudaiApp", "sharedData"), (docSnap) => {
+            firestore.onSnapshot(firestore.doc(window.db, "otetsudaiApp", "sharedTwoChildrenData"), (docSnap) => {
                 if (docSnap.exists()) {
-                    const onlineData = docSnap.data();
-                    calendarData = onlineData.calendarData || {};
-                    monthlyConfigs = onlineData.monthlyConfigs || {};
-                    childName = onlineData.childName || "";
+                    fullCloudData = docSnap.data();
                     
-                    document.getElementById('child-name-input').value = childName;
-                    updateTitleDisplay();
+                    // 名前の入力欄を更新
+                    document.getElementById('name1-input').value = fullCloudData.child1.name || "お子さん1";
+                    document.getElementById('name2-input').value = fullCloudData.child2.name || "お子さん2";
+                    
+                    updateLabels();
                     renderSettingsInput();
                     initCalendar();
                 } else {
@@ -356,14 +390,32 @@
     async function uploadToCloud() {
         if (!window.db) return;
         try {
-            await window.setDoc(window.doc(window.db, "otetsudaiApp", "sharedData"), {
-                calendarData: calendarData,
-                monthlyConfigs: monthlyConfigs,
-                childName: childName
-            });
+            await window.setDoc(window.doc(window.db, "otetsudaiApp", "sharedTwoChildrenData"), fullCloudData);
         } catch (e) {
             console.error("データ同期エラー: ", e);
         }
+    }
+
+    // 👦👧 タブを切り替えたとき
+    function switchChild(idx) {
+        currentChildIdx = idx;
+        document.getElementById('tab-child1').classList.toggle('active', idx === 1);
+        document.getElementById('tab-child2').classList.toggle('active', idx === 2);
+        
+        updateLabels();
+        renderSettingsInput();
+        initCalendar();
+    }
+
+    function updateLabels() {
+        const c1Name = fullCloudData.child1.name || "お子さん1";
+        const c2Name = fullCloudData.child2.name || "お子さん2";
+        
+        document.getElementById('tab-child1').innerText = `👦 ${c1Name}`;
+        document.getElementById('tab-child2').innerText = `👧 ${c2Name}`;
+        
+        const activeName = currentChildIdx === 1 ? c1Name : c2Name;
+        document.getElementById('config-target-name').innerText = activeName;
     }
 
     function initMonthSelectOptions() {
@@ -387,45 +439,39 @@
         if(select) select.value = monthKey;
     }
 
-    // ⭐【ロジック強化】過去の月にさかのぼって有効な設定を探す関数
     function getTaskConfigForMonth(monthKey) {
-        // 1. 指定された月そのものに完全なデータがあればそれを使う
-        if (monthlyConfigs[monthKey] && Array.isArray(monthlyConfigs[monthKey]) && monthlyConfigs[monthKey].length === 4) {
-            return monthlyConfigs[monthKey];
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        const mConfigs = currentChild.monthlyConfigs || {};
+
+        if (mConfigs[monthKey] && Array.isArray(mConfigs[monthKey]) && mConfigs[monthKey].length === 4) {
+            return mConfigs[monthKey];
         }
 
-        // 2. なければ、同じ年の中で「過去の月」を1月から順に遡って最新の有効な設定を探す
         const parts = monthKey.split('-');
         const year = parts[0];
         const currentMonth = parseInt(parts[1]);
 
         for (let m = currentMonth - 1; m >= 1; m--) {
             const checkKey = `${year}-${String(m).padStart(2, '0')}`;
-            if (monthlyConfigs[checkKey] && Array.isArray(monthlyConfigs[checkKey]) && monthlyConfigs[checkKey].length === 4) {
-                return monthlyConfigs[checkKey];
+            if (mConfigs[checkKey] && Array.isArray(mConfigs[checkKey]) && mConfigs[checkKey].length === 4) {
+                return mConfigs[checkKey];
             }
         }
 
-        // 3. 過去の月にも一切データがなければ、登録されている一番最初の月のデータを探す
         for (let m = 1; m <= 12; m++) {
             const checkKey = `${year}-${String(m).padStart(2, '0')}`;
-            if (monthlyConfigs[checkKey] && Array.isArray(monthlyConfigs[checkKey]) && monthlyConfigs[checkKey].length === 4) {
-                return monthlyConfigs[checkKey];
+            if (mConfigs[checkKey] && Array.isArray(mConfigs[checkKey]) && mConfigs[checkKey].length === 4) {
+                return mConfigs[checkKey];
             }
         }
 
-        // 4. 本当に何もなければ初期のデフォルト値を返す
         return JSON.parse(JSON.stringify(defaultTasks));
     }
 
-    function updateTitleDisplay() {
-        const titleEl = document.getElementById('app-title');
-        titleEl.innerText = childName ? `📅 ${childName} のおてつだいカレンダー` : `📅 おてつだいカレンダー`;
-    }
-
-    function saveChildNameOnly() {
-        childName = document.getElementById('child-name-input').value.trim();
-        updateTitleDisplay();
+    function saveNamesOnly() {
+        fullCloudData.child1.name = document.getElementById('name1-input').value.trim() || "お子さん1";
+        fullCloudData.child2.name = document.getElementById('name2-input').value.trim() || "お子さん2";
+        updateLabels();
         uploadToCloud();
     }
 
@@ -453,9 +499,6 @@
     }
 
     function saveConfiguration() {
-        childName = document.getElementById('child-name-input').value.trim();
-        updateTitleDisplay();
-
         const monthKey = document.getElementById('config-month-select').value;
         let newConfig = [];
 
@@ -468,8 +511,12 @@
             });
         }
 
-        monthlyConfigs[monthKey] = newConfig;
-        alert(`${parseInt(monthKey.split('-')[1])}月 の設定を保存しました！\n他の未設定の月にも自動で流用されます。`);
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        if (!currentChild.monthlyConfigs) currentChild.monthlyConfigs = {};
+        currentChild.monthlyConfigs[monthKey] = newConfig;
+
+        const activeName = currentChildIdx === 1 ? fullCloudData.child1.name : fullCloudData.child2.name;
+        alert(`${activeName}ちゃんの ${parseInt(monthKey.split('-')[1])}月 の設定を保存しました！`);
         uploadToCloud();
     }
 
@@ -493,6 +540,9 @@
 
         const firstDayIndex = new Date(year, month, 1).getDay();
         const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        const cData = currentChild.calendarData || {};
         const currentMonthConfig = getTaskConfigForMonth(monthKey);
 
         for (let i = 0; i < firstDayIndex; i++) {
@@ -511,12 +561,12 @@
             }
 
             let statusHtml = "-";
-            if (calendarData[dateKey]) {
+            if (cData[dateKey]) {
                 let dayMoney = 0;
                 let doneCount = 0;
                 let hasOff = false;
 
-                calendarData[dateKey].forEach((state, i) => {
+                cData[dateKey].forEach((state, i) => {
                     if (state === 'done') {
                         dayMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
                         doneCount++;
@@ -557,10 +607,13 @@
         const rowsContainer = document.getElementById('modal-task-rows');
         rowsContainer.innerHTML = "";
 
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        const cData = currentChild.calendarData || {};
+
         currentMonthConfig.forEach((task, i) => {
             let savedState = 'none';
-            if (calendarData[dateKey] && calendarData[dateKey][i]) {
-                savedState = calendarData[dateKey][i];
+            if (cData[dateKey] && cData[dateKey][i]) {
+                savedState = cData[dateKey][i];
             }
 
             const row = document.createElement('div');
@@ -595,10 +648,13 @@
             }
         }
 
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        if (!currentChild.calendarData) currentChild.calendarData = {};
+
         if (hasData) {
-            calendarData[selectedDateStr] = dayStates;
+            currentChild.calendarData[selectedDateStr] = dayStates;
         } else {
-            delete calendarData[selectedDateStr];
+            delete currentChild.calendarData[selectedDateStr];
         }
 
         closeModal();
@@ -614,11 +670,13 @@
         const currentMonth = displayDate.getMonth() + 1;
         const monthPrefix = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
         
+        const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
+        const cData = currentChild.calendarData || {};
         const currentMonthConfig = getTaskConfigForMonth(monthPrefix);
 
-        for (let key in calendarData) {
+        for (let key in cData) {
             if (key.startsWith(monthPrefix)) {
-                const dayStates = calendarData[key];
+                const dayStates = cData[key];
                 dayStates.forEach((state, i) => {
                     if (state === 'done') {
                         totalMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
@@ -656,10 +714,10 @@
             let periodDone = 0;
             let periodTarget = 0;
 
-            for (let key in calendarData) {
+            for (let key in cData) {
                 let match = targetPrefixes.some(p => key.startsWith(p));
                 if (match) {
-                    const dayStates = calendarData[key];
+                    const dayStates = cData[key];
                     dayStates.forEach(state => {
                         if (state === 'done') {
                             periodDone++;
