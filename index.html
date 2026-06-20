@@ -267,7 +267,6 @@
     </script>
 </head>
 <body>
-<button class="nav-btn" style="background:#52c41a; margin-top:10px;" onclick="window.print()">🖨️ 印刷する</button>
 <div class="container">
     <div class="child-switcher">
         <div class="child-tab active" id="tab-child1" onclick="switchChild(1)">👦 お子さん1</div>
@@ -293,6 +292,9 @@
         <button class="nav-btn" onclick="changeMonth(-1)">◀ 前の月</button>
         <div class="month-title" id="calendar-title">----年--月</div>
         <button class="nav-btn" onclick="changeMonth(1)">次の月 ▶</button>
+    </div>
+    <div style="text-align: center; margin-bottom: 15px;">
+        <button class="nav-btn" style="background:#52c41a;" onclick="window.print()">🖨️ カレンダーを印刷する</button>
     </div>
 
     <div class="weekdays">
