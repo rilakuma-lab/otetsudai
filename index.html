@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <link rel="apple-touch-icon" href="icon.png?v=2">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>おてつだいカレンダー（ふたり対応版）</title>
+    <link rel="apple-touch-icon" href="icon.png?v=2">
+    <title>おてつだいカレンダー（印刷強化版）</title>
     <style>
         html, body {
             width: 100%;
@@ -175,14 +175,45 @@
             margin-bottom: 12px;
             text-align: center;
         }
+        
         .input-group-names {
             margin-bottom: 15px;
             display: flex;
+            flex-direction: column;
             gap: 10px;
         }
-        .input-group-names div { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .input-group-names div { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+            width: 100%; 
+            box-sizing: border-box;
+        }
         .input-group-names label { font-size: 12px; font-weight: bold; color: #595959; }
-        .input-group-names input, .settings-section select { padding: 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: white; }
+        .input-group-names input { 
+            width: 100%; 
+            box-sizing: border-box; 
+            padding: 8px; 
+            border: 1px solid #d9d9d9; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            background: white; 
+        }
+        
+        @media (min-width: 400px) {
+            .input-group-names { flex-direction: row; }
+            .input-group-names div { flex: 1; }
+        }
+
+        .settings-section select { 
+            width: 100%; 
+            box-sizing: border-box; 
+            padding: 8px; 
+            border: 1px solid #d9d9d9; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            background: white; 
+        }
         
         .config-row {
             display: flex;
@@ -196,50 +227,47 @@
             font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center; align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 15px;
-            border-radius: 16px;
-            width: 92%;
-            max-width: 380px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            box-sizing: border-box;
-        }
-        .modal h3 { margin-top: 0; color: #ff7f50; text-align: center; margin-bottom: 5px; font-size: 16px; }
-        
-        .task-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 6px;
-            margin: 6px 0;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        .task-name { font-size: 12px; font-weight: bold; flex: 1; margin-right: 2px; word-break: break-all; }
-        .radio-group { display: flex; gap: 4px; }
-        .radio-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 9px;
-            cursor: pointer;
-            min-width: 32px;
-        }
-        .radio-label input { margin-bottom: 2px; }
+        /* 📱 印刷専用エリア（通常は隠す） */
+        #print-only-info, #print-only-receipt { display: none; }
 
-        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .btn.save { background: #52c41a; color: white; }
-        .btn.cancel { background: #d9d9d9; color: #595959; }
+        /* 📱 iPhone等での「印刷用画面モード」のデザイン制御 */
+        body.print-mode { background: white; padding: 0; }
+        body.print-mode .child-switcher,
+        body.print-mode .status-container,
+        body.print-mode .nav-btn,
+        body.print-mode .settings-section,
+        body.print-mode #btn-print-start { display: none !important; }
+        body.print-mode .container { box-shadow: none; border-radius: 0; padding: 5px; }
+        body.print-mode .calendar-header { justify-content: center; font-size: 22px; margin-bottom: 5px; }
+        body.print-mode .day { border: 1px solid #ccc; background: white; }
+        body.print-mode .day.empty { border: none; }
+        
+        /* 印刷モード時のみ表示する */
+        body.print-mode #print-only-info { display: block !important; text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #eb2f96; background: #fff0f6; padding: 8px; border-radius: 8px; }
+        body.print-mode #print-only-receipt { display: block !important; margin-top: 25px; border-top: 2px dashed #333; padding-top: 15px; }
+
+        #btn-print-back { display: none; width: 100%; background: #8c8c8c; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; margin-bottom: 15px; cursor: pointer; }
+        body.print-mode #btn-print-back { display: block !important; }
+
+        /* 通常のPC/ブラウザ紙印刷用設定 */
+        @media print {
+            .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, #btn-print-back { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .container { box-shadow: none !important; padding: 0 !important; width: 100% !important; }
+            .calendar-header { justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
+            .day { border: 1px solid #ccc !important; background: white !important; }
+            .day.empty { border: none !important; }
+            #print-only-info { display: block !important; text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #eb2f96; background: #fff0f6; padding: 8px; border-radius: 8px; }
+            #print-only-receipt { display: block !important; margin-top: 25px; border-top: 2px dashed #333; padding-top: 15px; }
+        }
+
+        /* 印刷画面内のテーブル装飾 */
+        .print-task-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .print-task-table th, .print-task-table td { border: 1px solid #d9d9d9; padding: 6px 8px; text-align: left; }
+        .print-task-table th { background: #f5f5f5; }
+        
+        .receipt-box { display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; font-weight: bold; }
+        .receipt-line { border-bottom: 1px solid #333; width: 180px; display: inline-block; height: 20px; }
     </style>
 
     <script type="module">
@@ -267,10 +295,13 @@
     </script>
 </head>
 <body>
+
 <div class="container">
+    <button id="btn-print-back" onclick="togglePrintMode(false)">⬅️ もどる（記録画面へ）</button>
+
     <div class="child-switcher">
         <div class="child-tab active" id="tab-child1" onclick="switchChild(1)">👦 お子さん1</div>
-        <div class="child-tab" id="tab-child2" onclick="switchChild(2)">👦 お子さん2</div>
+        <div class="child-tab" id="tab-child2" onclick="switchChild(2)">👧 お子さん2</div>
     </div>
     
     <div class="status-container">
@@ -293,14 +324,38 @@
         <div class="month-title" id="calendar-title">----年--月</div>
         <button class="nav-btn" onclick="changeMonth(1)">次の月 ▶</button>
     </div>
-    <div style="text-align: center; margin-bottom: 15px;">
-        <button class="nav-btn" style="background:#52c41a;" onclick="window.print()">🖨️ カレンダーを印刷する</button>
+
+    <div id="btn-print-start" style="text-align: center; margin-bottom: 15px;">
+        <button class="nav-btn" style="background:#52c41a; font-size:14px; padding:8px 16px;" onclick="togglePrintMode(true)">🖨️ 印刷用の画面にする</button>
+    </div>
+
+    <div id="print-only-info">
+        💰 今月の獲得おこづかい： <span id="print-total-money">0</span> 円
     </div>
 
     <div class="weekdays">
         <div style="color: #ff4d4f;">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div style="color: #1890ff;">土</div>
     </div>
     <div class="days" id="calendar-days"></div>
+
+    <div id="print-only-receipt">
+        <h4 style="margin: 0 0 5px 0; font-size: 13px; color:#555;">📋 今月のおてつだい内容</h4>
+        <table class="print-task-table">
+            <thead>
+                <tr>
+                    <th>おてつだいのなまえ</th>
+                    <th style="width: 70px; text-align: right;">1回のほうしゅう</th>
+                </tr>
+            </thead>
+            <tbody id="print-task-tbody">
+                </tbody>
+        </table>
+
+        <div class="receipt-box">
+            <div>📅 おこづかいをうけとった日: <span class="receipt-line"></span></div>
+            <div>✍️ サイン（なまえ）: <span class="receipt-line"></span></div>
+        </div>
+    </div>
 
     <div class="settings-section">
         <h2>⚙️ アプリの設定</h2>
@@ -311,7 +366,7 @@
                 <input type="text" id="name1-input" placeholder="例：たろう" value="" onchange="saveNamesOnly()">
             </div>
             <div>
-                <label for="name2-input">👦 お子さん2のなまえ</label>
+                <label for="name2-input">👧 お子さん2のなまえ</label>
                 <input type="text" id="name2-input" placeholder="例：はなこ" value="" onchange="saveNamesOnly()">
             </div>
         </div>
@@ -345,13 +400,12 @@
 </div>
 
 <script>
-    // 2人分のデータをまるごと管理する巨大な箱
     let fullCloudData = {
         child1: { calendarData: {}, monthlyConfigs: {}, name: "お子さん1" },
         child2: { calendarData: {}, monthlyConfigs: {}, name: "お子さん2" }
     };
 
-    let currentChildIdx = 1; // 1 = 子1, 2 = 子2
+    let currentChildIdx = 1;
     let selectedDateStr = "";
     let displayDate = new Date();
     const today = new Date();
@@ -375,7 +429,6 @@
                 if (docSnap.exists()) {
                     fullCloudData = docSnap.data();
                     
-                    // 名前の入力欄を更新
                     document.getElementById('name1-input').value = fullCloudData.child1.name || "お子さん1";
                     document.getElementById('name2-input').value = fullCloudData.child2.name || "お子さん2";
                     
@@ -399,7 +452,15 @@
         }
     }
 
-    // 👦👧 タブを切り替えたとき
+    window.togglePrintMode = function(isPrint) {
+        if (isPrint) {
+            document.body.classList.add('print-mode');
+        } else {
+            document.body.classList.remove('print-mode');
+        }
+        initCalendar();
+    }
+
     function switchChild(idx) {
         currentChildIdx = idx;
         document.getElementById('tab-child1').classList.toggle('active', idx === 1);
@@ -415,7 +476,7 @@
         const c2Name = fullCloudData.child2.name || "お子さん2";
         
         document.getElementById('tab-child1').innerText = `👦 ${c1Name}`;
-        document.getElementById('tab-child2').innerText = `👦 ${c2Name}`;
+        document.getElementById('tab-child2').innerText = `👧 ${c2Name}`;
         
         const activeName = currentChildIdx === 1 ? c1Name : c2Name;
         document.getElementById('config-target-name').innerText = activeName;
@@ -529,13 +590,31 @@
         const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
         const titleEl = document.getElementById('calendar-title');
-        if(titleEl) titleEl.innerText = `${year}年${month + 1}月`;
+        const activeName = currentChildIdx === 1 ? (fullCloudData.child1.name || "お子さん1") : (fullCloudData.child2.name || "お子さん2");
+        
+        if(titleEl) {
+            titleEl.innerText = document.body.classList.contains('print-mode') 
+                ? `${activeName}ちゃん ${year}年${month + 1}月 のおてつだい記録`
+                : `${year}年${month + 1}月`;
+        }
         
         const labels = document.querySelectorAll('.stat-month-label');
         labels.forEach(l => l.innerText = `${month + 1}月`);
 
         syncConfigSelectWithDisplayDate();
         renderSettingsInput();
+
+        // 印刷テーブル用のお手伝い内容挿入
+        const currentMonthConfig = getTaskConfigForMonth(monthKey);
+        const tbody = document.getElementById('print-task-tbody');
+        if(tbody) {
+            tbody.innerHTML = "";
+            currentMonthConfig.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${t.name}</td><td style="text-align:right;">${t.price}円</td>`;
+                tbody.appendChild(tr);
+            });
+        }
 
         const container = document.getElementById('calendar-days');
         if(!container) return;
@@ -546,7 +625,6 @@
         
         const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
         const cData = currentChild.calendarData || {};
-        const currentMonthConfig = getTaskConfigForMonth(monthKey);
 
         for (let i = 0; i < firstDayIndex; i++) {
             const emptyDiv = document.createElement('div');
@@ -588,7 +666,10 @@
             }
 
             dayDiv.innerHTML = `<span>${day}</span><div class="day-status" id="status-${dateKey}">${statusHtml}</div>`;
-            dayDiv.onclick = () => openModal(dateKey, month + 1, day);
+            
+            if (!document.body.classList.contains('print-mode')) {
+                dayDiv.onclick = () => openModal(dateKey, month + 1, day);
+            }
             container.appendChild(dayDiv);
         }
 
@@ -701,6 +782,10 @@
         const rEl = document.getElementById('achievement-rate');
         if(mEl) mEl.innerText = totalMoney;
         if(rEl) rEl.innerText = rate;
+
+        // 印刷モード用金額
+        const pmEl = document.getElementById('print-total-money');
+        if(pmEl) pmEl.innerText = totalMoney.toLocaleString();
 
         const bonusBox = document.getElementById('bonus-box');
         
