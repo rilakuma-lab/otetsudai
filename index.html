@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <link rel="apple-touch-icon" href="icon.png?v=2">
-    <title>おてつだいカレンダー（印刷強化版）</title>
+    <title>おてつだいカレンダー（印刷修正版）</title>
     <style>
         html, body {
             width: 100%;
@@ -227,47 +227,45 @@
             font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
         }
 
-        /* 📱 印刷専用エリア（通常は隠す） */
+        /* 📱 印刷専用エリア（通常は非表示） */
         #print-only-info, #print-only-receipt { display: none; }
 
-        /* 📱 iPhone等での「印刷用画面モード」のデザイン制御 */
-        body.print-mode { background: white; padding: 0; }
+        /* 📱 iPhone用「印刷モード」のCSS制御 */
+        body.print-mode { background: white !important; padding: 0 !important; }
         body.print-mode .child-switcher,
         body.print-mode .status-container,
         body.print-mode .nav-btn,
         body.print-mode .settings-section,
         body.print-mode #btn-print-start { display: none !important; }
-        body.print-mode .container { box-shadow: none; border-radius: 0; padding: 5px; }
-        body.print-mode .calendar-header { justify-content: center; font-size: 22px; margin-bottom: 5px; }
-        body.print-mode .day { border: 1px solid #ccc; background: white; }
-        body.print-mode .day.empty { border: none; }
+        body.print-mode .container { box-shadow: none !important; border-radius: 0 !important; padding: 5px !important; }
+        body.print-mode .calendar-header { display: flex !important; justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
+        body.print-mode .day { border: 1px solid #ccc !important; background: white !important; }
+        body.print-mode .day.empty { border: none !important; }
         
-        /* 印刷モード時のみ表示する */
-        body.print-mode #print-only-info { display: block !important; text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #eb2f96; background: #fff0f6; padding: 8px; border-radius: 8px; }
-        body.print-mode #print-only-receipt { display: block !important; margin-top: 25px; border-top: 2px dashed #333; padding-top: 15px; }
+        body.print-mode #print-only-info { display: block !important; text-align: center !important; margin-bottom: 15px !important; font-size: 16px !important; font-weight: bold !important; color: #eb2f96 !important; background: #fff0f6 !important; padding: 8px !important; border-radius: 8px !important; }
+        body.print-mode #print-only-receipt { display: block !important; margin-top: 25px !important; border-top: 2px dashed #333 !important; padding-top: 15px !important; }
 
         #btn-print-back { display: none; width: 100%; background: #8c8c8c; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; margin-bottom: 15px; cursor: pointer; }
         body.print-mode #btn-print-back { display: block !important; }
 
-        /* 通常のPC/ブラウザ紙印刷用設定 */
+        /* 通常のブラウザ紙印刷用設定 */
         @media print {
             .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, #btn-print-back { display: none !important; }
             body { background: white !important; padding: 0 !important; }
             .container { box-shadow: none !important; padding: 0 !important; width: 100% !important; }
-            .calendar-header { justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
+            .calendar-header { display: flex !important; justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
             .day { border: 1px solid #ccc !important; background: white !important; }
             .day.empty { border: none !important; }
-            #print-only-info { display: block !important; text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: #eb2f96; background: #fff0f6; padding: 8px; border-radius: 8px; }
-            #print-only-receipt { display: block !important; margin-top: 25px; border-top: 2px dashed #333; padding-top: 15px; }
+            #print-only-info { display: block !important; text-align: center !important; margin-bottom: 15px !important; font-size: 16px !important; font-weight: bold !important; color: #eb2f96 !important; background: #fff0f6 !important; padding: 8px !important; border-radius: 8px !important; }
+            #print-only-receipt { display: block !important; margin-top: 25px !important; border-top: 2px dashed #333 !important; padding-top: 15px !important; }
         }
 
-        /* 印刷画面内のテーブル装飾 */
         .print-task-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         .print-task-table th, .print-task-table td { border: 1px solid #d9d9d9; padding: 6px 8px; text-align: left; }
         .print-task-table th { background: #f5f5f5; }
         
-        .receipt-box { display: flex; justify-content: space-between; margin-top: 15px; font-size: 13px; font-weight: bold; }
-        .receipt-line { border-bottom: 1px solid #333; width: 180px; display: inline-block; height: 20px; }
+        .receipt-box { display: flex; justify-content: space-between; margin-top: 25px; font-size: 13px; font-weight: bold; }
+        .receipt-line { border-bottom: 1px solid #333; width: 150px; display: inline-block; height: 20px; }
     </style>
 
     <script type="module">
@@ -352,8 +350,8 @@
         </table>
 
         <div class="receipt-box">
-            <div>📅 おこづかいをうけとった日: <span class="receipt-line"></span></div>
-            <div>✍️ サイン（なまえ）: <span class="receipt-line"></span></div>
+            <div>📅 うけとった日: <span class="receipt-line"></span></div>
+            <div>✍️ サイン: <span class="receipt-line"></span></div>
         </div>
     </div>
 
@@ -452,12 +450,14 @@
         }
     }
 
+    // 📱 切り替え処理の安全化
     window.togglePrintMode = function(isPrint) {
         if (isPrint) {
             document.body.classList.add('print-mode');
         } else {
             document.body.classList.remove('print-mode');
         }
+        // カレンダーの再描画で画面を切り替える
         initCalendar();
     }
 
@@ -484,6 +484,7 @@
 
     function initMonthSelectOptions() {
         const select = document.getElementById('config-month-select');
+        if (!select) return;
         select.innerHTML = "";
         const year = displayDate.getFullYear();
         for (let m = 1; m <= 12; m++) {
@@ -546,6 +547,7 @@
         const config = getTaskConfigForMonth(monthKey);
         
         const container = document.getElementById('config-container');
+        if (!container) return;
         container.innerHTML = "";
         config.forEach((task, i) => {
             const row = document.createElement('div');
@@ -594,26 +596,27 @@
         
         if(titleEl) {
             titleEl.innerText = document.body.classList.contains('print-mode') 
-                ? `${activeName}ちゃん ${year}年${month + 1}月 のおてつだい記録`
+                ? `${activeName}ちゃん ${year}年${month + 1}月 のおてつだいきろく`
                 : `${year}年${month + 1}月`;
         }
         
         const labels = document.querySelectorAll('.stat-month-label');
         labels.forEach(l => l.innerText = `${month + 1}月`);
 
-        syncConfigSelectWithDisplayDate();
-        renderSettingsInput();
-
-        // 印刷テーブル用のお手伝い内容挿入
+        // 印刷テーブル用のお手伝い内容（安全にエラー回避）
         const currentMonthConfig = getTaskConfigForMonth(monthKey);
         const tbody = document.getElementById('print-task-tbody');
         if(tbody) {
             tbody.innerHTML = "";
-            currentMonthConfig.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${t.name}</td><td style="text-align:right;">${t.price}円</td>`;
-                tbody.appendChild(tr);
-            });
+            if (Array.isArray(currentMonthConfig)) {
+                currentMonthConfig.forEach(t => {
+                    if (t && t.name) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${t.name}</td><td style="text-align:right;">${t.price}円</td>`;
+                        tbody.appendChild(tr);
+                    }
+                });
+            }
         }
 
         const container = document.getElementById('calendar-days');
@@ -649,7 +652,7 @@
 
                 cData[dateKey].forEach((state, i) => {
                     if (state === 'done') {
-                        dayMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
+                        dayMoney += (currentMonthConfig[i] && currentMonthConfig[i].price) ? currentMonthConfig[i].price : 10;
                         doneCount++;
                     } else if (state === 'off') {
                         hasOff = true;
@@ -689,6 +692,7 @@
         document.getElementById('modal-date-title').innerText = `${month}月${day}日 のきろく`;
         
         const rowsContainer = document.getElementById('modal-task-rows');
+        if (!rowsContainer) return;
         rowsContainer.innerHTML = "";
 
         const currentChild = currentChildIdx === 1 ? fullCloudData.child1 : fullCloudData.child2;
@@ -763,7 +767,7 @@
                 const dayStates = cData[key];
                 dayStates.forEach((state, i) => {
                     if (state === 'done') {
-                        totalMoney += currentMonthConfig[i] ? currentMonthConfig[i].price : 10;
+                        totalMoney += (currentMonthConfig[i] && currentMonthConfig[i].price) ? currentMonthConfig[i].price : 10;
                         totalDoneTasks++;
                         totalTargetTasks++;
                     } else if (state === 'none') {
@@ -783,7 +787,6 @@
         if(mEl) mEl.innerText = totalMoney;
         if(rEl) rEl.innerText = rate;
 
-        // 印刷モード用金額
         const pmEl = document.getElementById('print-total-money');
         if(pmEl) pmEl.innerText = totalMoney.toLocaleString();
 
