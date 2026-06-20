@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <link rel="apple-touch-icon" href="icon.png?v=2">
-    <title>おてつだいカレンダー（印刷修正版）</title>
+    <link class="apple-touch-icon" href="icon.png?v=2">
+    <title>おてつだいカレンダー（ポップアップ修正版）</title>
     <style>
         html, body {
             width: 100%;
@@ -29,6 +29,7 @@
             padding: 15px;
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            position: relative;
         }
         
         /* 👦👧 お子さん切り替えタブ */
@@ -164,6 +165,53 @@
             100% { transform: scale(1); }
         }
 
+        /* 💬 きろく用入力ポップアップ（画面中央に浮き出る設定） */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+        }
+        .modal-content h3 { margin: 0 0 8px 0; text-align: center; font-size: 16px; color: #333; }
+        
+        .task-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .task-name { font-size: 13px; font-weight: bold; color: #434343; }
+        .radio-group { display: flex; gap: 4px; }
+        .radio-label {
+            font-size: 11px; padding: 6px 8px; background: #f5f5f5; border-radius: 8px;
+            cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 2px;
+        }
+        .radio-label input { margin: 0; }
+        .radio-label:has(input:checked) { background: #fff3e6; color: #ff7f50; box-shadow: inset 0 0 0 1px #ff7f50; }
+
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .btn.cancel { background: #f0f2f5; color: #595959; }
+        .btn.save { background: #ff7f50; color: white; }
+
         .settings-section {
             margin-top: 30px;
             border-top: 2px dashed #e8e8e8;
@@ -230,6 +278,9 @@
         /* 📱 印刷専用エリア（通常は非表示） */
         #print-only-info, #print-only-receipt { display: none; }
 
+        /* 📱 印刷用操作パネル */
+        .print-control-panel { display: none; gap: 10px; margin-bottom: 15px; }
+
         /* 📱 iPhone用「印刷モード」のCSS制御 */
         body.print-mode { background: white !important; padding: 0 !important; }
         body.print-mode .child-switcher,
@@ -237,6 +288,7 @@
         body.print-mode .nav-btn,
         body.print-mode .settings-section,
         body.print-mode #btn-print-start { display: none !important; }
+        body.print-mode .print-control-panel { display: flex !important; }
         body.print-mode .container { box-shadow: none !important; border-radius: 0 !important; padding: 5px !important; }
         body.print-mode .calendar-header { display: flex !important; justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
         body.print-mode .day { border: 1px solid #ccc !important; background: white !important; }
@@ -245,12 +297,13 @@
         body.print-mode #print-only-info { display: block !important; text-align: center !important; margin-bottom: 15px !important; font-size: 16px !important; font-weight: bold !important; color: #eb2f96 !important; background: #fff0f6 !important; padding: 8px !important; border-radius: 8px !important; }
         body.print-mode #print-only-receipt { display: block !important; margin-top: 25px !important; border-top: 2px dashed #333 !important; padding-top: 15px !important; }
 
-        #btn-print-back { display: none; width: 100%; background: #8c8c8c; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; margin-bottom: 15px; cursor: pointer; }
-        body.print-mode #btn-print-back { display: block !important; }
+        .print-panel-btn { flex: 1; border: none; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; }
+        .btn-back { background: #8c8c8c; color: white; }
+        .btn-go-print { background: #1890ff; color: white; }
 
         /* 通常のブラウザ紙印刷用設定 */
         @media print {
-            .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, #btn-print-back { display: none !important; }
+            .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, .print-control-panel { display: none !important; }
             body { background: white !important; padding: 0 !important; }
             .container { box-shadow: none !important; padding: 0 !important; width: 100% !important; }
             .calendar-header { display: flex !important; justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
@@ -295,7 +348,10 @@
 <body>
 
 <div class="container">
-    <button id="btn-print-back" onclick="togglePrintMode(false)">⬅️ もどる（記録画面へ）</button>
+    <div class="print-control-panel">
+        <button class="print-panel-btn btn-back" onclick="togglePrintMode(false)">⬅️ もどる</button>
+        <button class="print-panel-btn btn-go-print" onclick="window.print()">📄 この画面を印刷する</button>
+    </div>
 
     <div class="child-switcher">
         <div class="child-tab active" id="tab-child1" onclick="switchChild(1)">👦 お子さん1</div>
@@ -328,7 +384,8 @@
     </div>
 
     <div id="print-only-info">
-        💰 今月の獲得おこづかい： <span id="print-total-money">0</span> 円
+        <div id="print-main-money-text">💰 今月の獲得おこづかい： <span id="print-total-money">0</span> 円</div>
+        <div id="print-bonus-money-text" style="font-size: 13px; margin-top: 4px; color: #1d39c4; display:none;">🎁 半期ボーナス： <span id="print-bonus-money">0</span> 円</div>
     </div>
 
     <div class="weekdays">
@@ -450,14 +507,12 @@
         }
     }
 
-    // 📱 切り替え処理の安全化
     window.togglePrintMode = function(isPrint) {
         if (isPrint) {
             document.body.classList.add('print-mode');
         } else {
             document.body.classList.remove('print-mode');
         }
-        // カレンダーの再描画で画面を切り替える
         initCalendar();
     }
 
@@ -582,7 +637,7 @@
         currentChild.monthlyConfigs[monthKey] = newConfig;
 
         const activeName = currentChildIdx === 1 ? fullCloudData.child1.name : fullCloudData.child2.name;
-        alert(`${activeName}ちゃんの ${parseInt(monthKey.split('-')[1])}月 の設定を保存しました！`);
+        alert(`${activeName}の ${parseInt(monthKey.split('-')[1])}月 の設定を保存しました！`);
         uploadToCloud();
     }
 
@@ -596,14 +651,13 @@
         
         if(titleEl) {
             titleEl.innerText = document.body.classList.contains('print-mode') 
-                ? `${activeName}ちゃん ${year}年${month + 1}月 のおてつだいきろく`
+                ? `${activeName} ${year}年${month + 1}月 のおてつだいきろく`
                 : `${year}年${month + 1}月`;
         }
         
         const labels = document.querySelectorAll('.stat-month-label');
         labels.forEach(l => l.innerText = `${month + 1}月`);
 
-        // 印刷テーブル用のお手伝い内容（安全にエラー回避）
         const currentMonthConfig = getTaskConfigForMonth(monthKey);
         const tbody = document.getElementById('print-task-tbody');
         if(tbody) {
@@ -791,6 +845,8 @@
         if(pmEl) pmEl.innerText = totalMoney.toLocaleString();
 
         const bonusBox = document.getElementById('bonus-box');
+        const pBonusText = document.getElementById('print-bonus-money-text');
+        const pbEl = document.getElementById('print-bonus-money');
         
         if (currentMonth === 6 || currentMonth === 12) {
             if(bonusBox) bonusBox.style.display = "block";
@@ -831,8 +887,14 @@
             let bonusMoney = Math.round((avgPrice * 100) * periodRate);
             const bEl = document.getElementById('bonus-money');
             if(bEl) bEl.innerText = bonusMoney.toLocaleString();
+            
+            if(pBonusText && pbEl) {
+                pbEl.innerText = bonusMoney.toLocaleString();
+                pBonusText.style.display = "block";
+            }
         } else {
             if(bonusBox) bonusBox.style.display = "none";
+            if(pBonusText) pBonusText.style.display = "none";
         }
     }
 </script>
