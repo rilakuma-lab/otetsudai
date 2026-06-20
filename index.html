@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <link class="apple-touch-icon" href="icon.png?v=2">
-    <title>おてつだいカレンダー（ポップアップ修正版）</title>
+    <title>おてつだいカレンダー（完全修正版）</title>
     <style>
         html, body {
             width: 100%;
@@ -165,7 +165,7 @@
             100% { transform: scale(1); }
         }
 
-        /* 💬 きろく用入力ポップアップ（画面中央に浮き出る設定） */
+        /* 💬 きろく用入力ポップアップ（通常画面だけで動くよう最背面に隔離） */
         .modal {
             display: none;
             position: fixed;
@@ -275,20 +275,19 @@
             font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
         }
 
-        /* 📱 印刷専用エリア（通常は非表示） */
-        #print-only-info, #print-only-receipt { display: none; }
+        /* 📱 印刷エリアの初期設定（通常時は絶対隠す） */
+        #print-only-info, #print-only-receipt, .print-control-panel { display: none !important; }
 
-        /* 📱 印刷用操作パネル */
-        .print-control-panel { display: none; gap: 10px; margin-bottom: 15px; }
-
-        /* 📱 iPhone用「印刷モード」のCSS制御 */
+        /* 📱 「印刷用の画面にする」ボタンを押したとき（print-mode）の設定 */
         body.print-mode { background: white !important; padding: 0 !important; }
         body.print-mode .child-switcher,
         body.print-mode .status-container,
         body.print-mode .nav-btn,
         body.print-mode .settings-section,
-        body.print-mode #btn-print-start { display: none !important; }
-        body.print-mode .print-control-panel { display: flex !important; }
+        body.print-mode #btn-print-start,
+        body.print-mode .modal { display: none !important; }
+        
+        body.print-mode .print-control-panel { display: flex !important; gap: 10px; margin-bottom: 15px; }
         body.print-mode .container { box-shadow: none !important; border-radius: 0 !important; padding: 5px !important; }
         body.print-mode .calendar-header { display: flex !important; justify-content: center !important; font-size: 22px !important; margin-bottom: 5px !important; }
         body.print-mode .day { border: 1px solid #ccc !important; background: white !important; }
@@ -301,7 +300,7 @@
         .btn-back { background: #8c8c8c; color: white; }
         .btn-go-print { background: #1890ff; color: white; }
 
-        /* 通常のブラウザ紙印刷用設定 */
+        /* 🖨️ 実際の紙・PDF印刷実行時の動き */
         @media print {
             .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, .print-control-panel { display: none !important; }
             body { background: white !important; padding: 0 !important; }
