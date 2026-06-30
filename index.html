@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <link class="apple-touch-icon" href="icon.png?v=2">
-    <title>おてつだいカレンダー（ボーナス達成率追加版）</title>
+    <title>おてつだいカレンダー（入力アイコン変更版）</title>
     <style>
         html, body {
             width: 100%;
@@ -313,10 +313,9 @@
             font-size: 14px; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 5px;
         }
 
-        /* 📱 印刷エリアの初期設定 */
+        /* 📱 印刷エリアの設定 */
         #print-only-info, #print-only-receipt, .print-control-panel { display: none !important; }
 
-        /* 📱 印刷用画面の設定 */
         body.print-mode { background: white !important; padding: 0 !important; }
         body.print-mode .child-switcher,
         body.print-mode .status-container,
@@ -337,7 +336,6 @@
         .btn-back { background: #8c8c8c; color: white; }
         .btn-go-print { background: #1890ff; color: white; }
 
-        /* 🖨️ 実際の印刷時 */
         @media print {
             .child-switcher, .status-container, .nav-btn, .settings-section, .save-config-btn, .modal, #btn-print-start, .print-control-panel { display: none !important; }
             body { background: white !important; padding: 0 !important; }
@@ -568,7 +566,7 @@
         const c2Name = fullCloudData.child2.name || "お子さん2";
         
         document.getElementById('tab-child1').innerText = `👦 ${c1Name}`;
-        document.getElementById('tab-child2').innerText = `👦 ${c2Name}`; /* アイコン変更 */
+        document.getElementById('tab-child2').innerText = `👦 ${c2Name}`;
         
         const activeName = currentChildIdx === 1 ? c1Name : c2Name;
         document.getElementById('config-target-name').innerText = activeName;
@@ -797,12 +795,13 @@
 
             const card = document.createElement('div');
             card.className = "task-card";
+            /* 🛠️ 「やった」のアイコンを「⭕️」に、「休み」のアイコンを「／」にアップデート */
             card.innerHTML = `
                 <div class="task-name">${task.name}<br><span style="font-size:10px; color:#aaa; font-weight:normal;">(${task.price}円)</span></div>
                 <div class="radio-group">
-                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="done" ${savedState === 'done' ? 'checked' : ''}><span>👍</span><span>やった</span></label>
+                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="done" ${savedState === 'done' ? 'checked' : ''}><span>⭕️</span><span>やった</span></label>
                     <label class="radio-label"><input type="radio" name="modal-task${i}" value="none" ${savedState === 'none' ? 'checked' : ''}><span>❌</span><span>なし</span></label>
-                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="off" ${savedState === 'off' ? 'checked' : ''}><span>💤</span><span>休み</span></label>
+                    <label class="radio-label"><input type="radio" name="modal-task${i}" value="off" ${savedState === 'off' ? 'checked' : ''}><span>／</span><span>休み</span></label>
                 </div>
             `;
             gridContainer.appendChild(card);
@@ -924,7 +923,6 @@
             }
             let displayPeriodPercent = Math.round(periodRate * 100);
 
-            // 🛠️ 半期ボーナスの欄に対象月の累計達成率を表示
             if(periodRateLabel) {
                 periodRateLabel.innerText = `（${rangeText}達成率: ${displayPeriodPercent}%）`;
             }
